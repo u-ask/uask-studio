@@ -1,0 +1,41 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "All tests",
+            "trace": true,
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "program": "${workspaceFolder}/node_modules/tape/bin/tape",
+            "args": [
+                "-r",
+                "ts-node/register",
+                "${workspaceFolder}/src/**/*.test.ts"
+            ],
+            "envFile": "${workspaceFolder}/.env",
+            "internalConsoleOptions": "openOnSessionStart",
+            "outputCapture": "std"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Current file tests",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "program": "${workspaceFolder}/node_modules/tape/bin/tape",
+            "args": [
+                "-r",
+                "ts-node/register",
+                "${file}"
+            ],
+            "trace": true,
+            "envFile": "${workspaceFolder}/.env",
+            "internalConsoleOptions": "openOnSessionStart",
+            "outputCapture": "std"
+        }
+    ]
+}

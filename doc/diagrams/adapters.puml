@@ -1,0 +1,51 @@
+@startuml adapters
+interface IMutationCommand {
+  start(study, args);
+  getInterviewItems(pageSet);
+  apply(study, interviewItems);
+}
+
+class Study {
+  +pageSets
+  +pages
+  +items
+  +wotkflows
+  +crossRules
+  +update(kwargs: Partial<Study>)
+}
+
+class StudyAdapter <<(C, HotPink) Proxy>> {
+  +value
+  +pageSets
+  +pages
+  +items
+  +wotkflows
+  +crossRules
+  +start(command, args)
+  +getInterviewItems(pageSet)
+  +apply(interviewItems)
+}
+
+class Patient {
+  +patientCode
+  +siteCode
+  +interviews
+  +update(kwargs: Partial<Patient>
+}
+
+class PatientAdapter <<(C, HotPink) Proxy>> {
+  +patientCode
+  +siteCode
+  +interviews
+  +update(kwargs: Partial<Patient>
+}
+
+left to right direction
+StudyAdapter *--> IMutationCommand
+StudyAdapter::getInterviewItems ..> IMutationCommand::getInterviewItems
+StudyAdapter .l.|> Study 
+PatientAdapter .l.|> Patient
+PatientAdapter *--> StudyAdapter
+PatientAdapter::interviews ..> StudyAdapter::getInterviewItems
+hide IMutationCommand fields
+@enduml

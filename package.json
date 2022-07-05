@@ -1,0 +1,55 @@
+{
+  "name": "uask-studio",
+  "version": "1.1.0",
+  "description": "",
+  "main": "./dist/studio/index.js",
+  "exports": "./dist/studio/index.js",
+  "types": "./dist/studio/index.d.ts",
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "test": "node --loader ts-node/esm ./test-runner.ts",
+    "build": "./node_modules/.bin/tsc ; ./node_modules/.bin/rollup -c",
+    "lint": "./node_modules/.bin/eslint . --ext .ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/u-ask/uask-studio.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "homepage": "https://github.com/u-ask/uask-studio#readme",
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^22.0.0",
+    "@rollup/plugin-node-resolve": "^13.3.0",
+    "@rollup/plugin-typescript": "^8.3.2",
+    "@types/glob": "^7.2.0",
+    "@types/sinon": "^10.0.11",
+    "@types/tape": "^4.13.2",
+    "@typescript-eslint/eslint-plugin": "^5.27.1",
+    "@typescript-eslint/parser": "^5.27.1",
+    "c8": "^7.11.3",
+    "eslint": "^8.17.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-prettier": "^4.0.0",
+    "got": "^12.1.0",
+    "knex": "^2.1.0",
+    "prettier": "^2.6.2",
+    "rollup": "^2.75.5",
+    "rollup-plugin-dts": "^4.2.2",
+    "sinon": "^14.0.0",
+    "sqlite3": "^5.0.8",
+    "tape": "^5.5.3",
+    "ts-loader": "^9.3.0",
+    "ts-node": "^10.8.1",
+    "tslib": "^2.4.0",
+    "typedoc": "^0.22.17",
+    "typescript": "^4.7.3"
+  },
+  "dependencies": {
+    "uask-dom": "^0.1.0",
+    "uask-sys": "^0.1.0"
+  }
+}

@@ -1,0 +1,77 @@
+@startuml drivers
+
+interface IMutationCommand
+class StudyAdapter <<(C, HotPink) Proxy>> {
+  start(command, ...args)
+  getInterviewItems(pageSet)
+  apply(interviewItems)
+}
+class PatientAdapter <<(C, HotPink) Proxy>> {
+  interviews
+}
+class UpdateItemCommand {
+  start(study, page, index)
+  getInterviewItems(pageSet)
+  apply(study, interviewItems)
+}
+class InterviewStudioDriver {
+  save(study, patient, interview)
+}
+
+left to right direction
+PatientStudioDriver -> PatientAdapter
+StudyStudioDriver -> StudyAdapter
+StudyAdapter::start ..> UpdateItemCommand::start : start(...)
+StudyAdapter::apply ..> UpdateItemCommand::apply : apply(...)
+PatientAdapter::interviews ..> StudyAdapter::getInterviewItems : getInterviewItems(pageSet)
+InterviewStudioDriver::save ..> StudyAdapter::apply : apply(interviewItems)
+UpdateItemCommand .u|> IMutationCommand
+
+hide members
+show UpdateItemCommand methods
+show StudyAdapter methods
+show PatientAdapter fields
+show InterviewStudioDriver methods
+@enduml
+
+@startuml drivers2
+together {
+  class StudioDrivers
+  class ClientDrivers
+}
+together {
+  class StudyStudioDriver{
+    +save(studyAdapter)
+  }
+  class PatientStudioDriver
+  class InterviewStudioDriver {
+    +save(studyAdapter, patient, interview)
+  }
+}
+together {
+  class StudyClientDriver{
+    +save(studyAdapter)
+  }
+  class PatientClientDriver
+  class InterviewClientDriver{
+    +save(study, patient, interview)
+  }
+}
+left to right direction
+StudioDrivers *---> ClientDrivers
+StudyStudioDriver -* StudioDrivers
+PatientStudioDriver - StudyStudioDriver
+InterviewStudioDriver - PatientStudioDriver
+ClientDrivers *- StudyClientDriver
+StudyClientDriver - PatientClientDriver
+PatientClientDriver - InterviewClientDriver
+StudyStudioDriver::save ...> StudyClientDriver::save
+PatientStudioDriver ...> PatientClientDriver
+InterviewStudioDriver::save ...> InterviewClientDriver::save
+InterviewStudioDriver::save .> StudyStudioDriver::save
+hide members
+show InterviewStudioDriver methods
+show StudyStudioDriver methods
+show InterviewClientDriver methods
+show StudyClientDriver methods
+@enduml

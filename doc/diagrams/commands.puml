@@ -1,0 +1,33 @@
+@startuml commands
+interface IMutationCommand {
+  +start(study, ...args)
+  +getInterviewItems(pageSet)
+  +apply(study, interviewItems)
+}
+
+class MutableStudy <<(C, HotPink) Proxy>> {
+  +value
+  +name
+  +pageSets
+  +pages
+  +items
+  +wotkflows
+  +crossRules
+  +update(kwargs: Partial<Study>)
+  +updateItem(page, index, item: Partial<PageItem>)
+  +addItem(page, index, item: PageItem)
+}
+
+class UpdateItemCommand {
+  -parts
+  +start(study, page, index)
+  +getInterviewItems(study, pageSet)
+  +apply(study, interviewItems)
+}
+
+
+IMutationCommand <|.. UpdateItemCommand
+IMutationCommand <. MutableStudy
+MutableStudy <.. UpdateItemCommand
+hide IMutationCommand fields
+@enduml
