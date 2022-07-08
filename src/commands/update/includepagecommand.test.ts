@@ -70,7 +70,11 @@ test("Start modify include page command #386", t => {
 test("Apply add include page command #386", t => {
   const { survey, participant } = buildTestSurvey();
   const command = new IncludePageCommand();
-  command.start(new MutableSurvey(survey), new MutableParticipant(participant), 0);
+  command.start(
+    new MutableSurvey(survey),
+    new MutableParticipant(participant),
+    0
+  );
   const mutableSurvey = new MutableSurvey(survey);
   const mutableParticipant = new MutableParticipant(participant);
 
@@ -98,7 +102,11 @@ test("Apply add include page command #386", t => {
 test("Apply modify include page command #386", t => {
   const { survey, participant } = buildTestSurvey();
   const command = new IncludePageCommand();
-  command.start(new MutableSurvey(survey), new MutableParticipant(participant), 1);
+  command.start(
+    new MutableSurvey(survey),
+    new MutableParticipant(participant),
+    1
+  );
   const mutableSurvey = new MutableSurvey(survey);
   const mutableParticipant = new MutableParticipant(participant);
 

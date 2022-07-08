@@ -209,7 +209,7 @@ export class UpdateWorkflowCommand implements IMutationCommand {
       if (initial) workflowBuilder.initial(...initial);
       if (followUp) workflowBuilder.followUp(...followUp);
       if (auxiliary) workflowBuilder.auxiliary(...auxiliary);
-      if (end) workflowBuilder.end(...end);
+      if (end) workflowBuilder.terminal(...end);
     } else {
       const nameWithSpec = specifier ? `${name}:${specifier}` : name;
       const mainWorkflow = workflowSerialize(

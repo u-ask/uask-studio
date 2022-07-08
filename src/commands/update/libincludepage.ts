@@ -25,10 +25,13 @@ export function libIncludePage(
     .defaultValue(0)
     .comment("{.studioPage}");
 
+  const includeList = survey.pages.filter(
+    p => !survey.mainWorkflow.info.pages.includes(p)
+  );
   const pageChoices = mlChoices(
     b,
     "one",
-    survey.pages.map(p => p.name),
+    includeList.map(p => p.name),
     survey.options
   );
   builder
@@ -39,7 +42,7 @@ export function libIncludePage(
     .visibleWhen("__INCLUDE__")
     .comment("{.studioPage.pad}");
 
-  for (const page of survey.pages) buildQuestionSelector(b, builder, page);
+  for (const page of includeList) buildQuestionSelector(b, builder, page);
 
   builder
     .question("", "__INCLUDE_CONTEXT__", b.types.integer)

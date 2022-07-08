@@ -43,7 +43,7 @@ function buildTestSurvey() {
 
 test("start insert page command #97", t => {
   const { mutableSurvey, mutableParticipant } = startCommand();
-  const items = mutableSurvey.value.pages[3]
+  const items = mutableSurvey.value.pages[4]
     .items as IDomainCollection<PageItem>;
   const partsVariableNamesUpdate = [
     "__PAGE_CODE__",
@@ -137,7 +137,11 @@ function startCommand(pageIndex = 1) {
   const mutableSurvey = new MutableSurvey(survey);
   const mutableParticipant = new MutableParticipant(participant);
   command.start(mutableSurvey, mutableParticipant, 0, pageIndex);
-  return { context: { command, survey, participant }, mutableSurvey, mutableParticipant };
+  return {
+    context: { command, survey, participant },
+    mutableSurvey,
+    mutableParticipant,
+  };
 }
 
 function applyCommand(

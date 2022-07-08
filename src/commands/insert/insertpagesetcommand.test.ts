@@ -44,7 +44,7 @@ test("Insert page set start command #249", t => {
   const mutableSurvey = new MutableSurvey(survey);
   const mutableParticipant = new MutableParticipant(participant);
   command.start(mutableSurvey, mutableParticipant);
-  const items = mutableSurvey.value.pageSets[2].pages[0]
+  const items = mutableSurvey.value.pageSets[3].pages[0]
     .items as IDomainCollection<PageItem>;
   const partsVariableNames = [
     "__PAGE_SET_CODE__",
@@ -53,7 +53,7 @@ test("Insert page set start command #249", t => {
     "__PAGE_SET_PAGES__",
   ];
   t.true(partsVariableNames.every(v => items.find(i => v == i.variableName)));
-  t.equal(mutableParticipant.interviews[2].pageSet, mutableSurvey.pageSets[2]);
+  t.equal(mutableParticipant.interviews[2].pageSet, mutableSurvey.pageSets[3]);
   t.true(isConsistent(mutableSurvey, mutableParticipant));
   t.end();
 });
@@ -107,18 +107,20 @@ test("Insert page set apply #249", t => {
     new InterviewItem(updateCommand.pagesPart, ["P1", "P2"]),
     new InterviewItem(updateCommand.applyPart, true),
   ]);
-  t.equal(mutableSurvey.pageSets.length, 3);
-  t.deepEqual(mutableSurvey.pageSets[2].type, {
+  t.equal(mutableSurvey.pageSets.length, 4);
+  t.deepEqual(mutableSurvey.pageSets[3].type, {
     __code__: "TEST",
     en: "New name",
     fr: "Nouveau nom",
   });
   t.deepLooseEqual(
-    mutableSurvey.pageSets[2].pages.map(p => getTranslation(p.name, "__code__")),
+    mutableSurvey.pageSets[3].pages.map(p =>
+      getTranslation(p.name, "__code__")
+    ),
     ["P1", "P2"]
   );
-  t.equal(mutableSurvey.pageSets[2].datevar, "DATEVAR");
-  t.equal(mutableParticipant.interviews[2].pageSet, mutableSurvey.pageSets[2]);
+  t.equal(mutableSurvey.pageSets[3].datevar, "DATEVAR");
+  t.equal(mutableParticipant.interviews[2].pageSet, mutableSurvey.pageSets[3]);
   t.true(isConsistent(mutableSurvey, mutableParticipant));
   t.end();
 });

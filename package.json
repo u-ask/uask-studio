@@ -1,6 +1,6 @@
 {
   "name": "uask-studio",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "",
   "main": "./dist/studio/index.js",
   "exports": "./dist/studio/index.js",
@@ -31,6 +31,7 @@
     "@typescript-eslint/eslint-plugin": "^5.27.1",
     "@typescript-eslint/parser": "^5.27.1",
     "c8": "^7.11.3",
+    "dotenv": "^16.0.1",
     "eslint": "^8.17.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-prettier": "^4.0.0",
@@ -49,6 +50,10 @@
     "typescript": "^4.7.3"
   },
   "dependencies": {
+    "uask-dom": "^1.1.2",
+    "uask-sys": "^1.1.6"
+  },
+  "peerDependencies": {
     "uask-dom": "^0.1.0",
     "uask-sys": "^0.1.0"
   }

@@ -512,7 +512,7 @@ test("Update page set targets", async t => {
     });
   t.equal(state.interview, state.participant.interviews[1]);
   t.equal(state.pageSet, state.survey.pageSets[1]);
-  t.equal(state.page, state.survey.pages[3]);
+  t.equal(state.page, state.survey.pages[4]);
 
   const command = Reflect.get(state, "pending").command as UpdatePageSetCommand;
   const result = state.apply([
@@ -538,12 +538,12 @@ test("Insert page set targets", async t => {
     .start(InsertPageSetCommand)
     .then(({ interview, pageSet, page }) => {
       t.equal(interview, state.participant.interviews[2]);
-      t.equal(pageSet, state.survey.pageSets[2]);
-      t.equal(page, state.survey.pages[3]);
+      t.equal(pageSet, state.survey.pageSets[3]);
+      t.equal(page, state.survey.pages[4]);
     });
   t.equal(state.interview, state.participant.interviews[2]);
-  t.equal(state.pageSet, state.survey.pageSets[2]);
-  t.equal(state.page, state.survey.pages[3]);
+  t.equal(state.pageSet, state.survey.pageSets[3]);
+  t.equal(state.page, state.survey.pages[4]);
 
   const command = Reflect.get(state, "pending").command as InsertPageSetCommand;
   const updateCommand = Reflect.get(
@@ -555,8 +555,8 @@ test("Insert page set targets", async t => {
     new InterviewItem(updateCommand.typePart, "PS3"),
   ]);
   t.equal(result.interview, state.participant.interviews[2]);
-  t.equal(result.pageSet, state.survey.pageSets[2]);
-  t.equal(result.page, state.survey.pages[3]);
+  t.equal(result.pageSet, state.survey.pageSets[3]);
+  t.equal(result.page, state.survey.pages[4]);
   await started;
   t.end();
 });
@@ -578,7 +578,7 @@ test("Delete page set targets", async t => {
     });
   t.equal(state.interview, state.participant.interviews[1]);
   t.equal(state.pageSet, state.survey.pageSets[1]);
-  t.equal(state.page, state.survey.pages[3]);
+  t.equal(state.page, state.survey.pages[4]);
 
   const result = state.apply([]);
   t.equal(result.interview, state.participant.interviews[0]);
@@ -629,11 +629,11 @@ test("Insert page targets", async t => {
     .then(({ interview, pageSet, page }) => {
       t.equal(interview, state.participant.interviews[1]);
       t.equal(pageSet, state.survey.pageSets[1]);
-      t.equal(page, state.survey.pages[3]);
+      t.equal(page, state.survey.pages[4]);
     });
   t.equal(state.interview, state.participant.interviews[1]);
   t.equal(state.pageSet, state.survey.pageSets[1]);
-  t.equal(state.page, state.survey.pages[3]);
+  t.equal(state.page, state.survey.pages[4]);
 
   const command = Reflect.get(state, "pending").command as InsertPageCommand;
   const updateCommand = Reflect.get(
@@ -646,7 +646,7 @@ test("Insert page targets", async t => {
   ]);
   t.equal(result.interview, state.participant.interviews[1]);
   t.equal(result.pageSet, state.survey.pageSets[1]);
-  t.equal(result.page, state.survey.pages[3]);
+  t.equal(result.page, state.survey.pages[4]);
   await started;
   t.end();
 });
@@ -728,7 +728,7 @@ test("Update workflow targets", async t => {
     });
   t.equal(state.interview, state.participant.interviews[0]);
   t.equal(state.pageSet, state.survey.pageSets[0]);
-  t.equal(state.page, state.survey.pages[3]);
+  t.equal(state.page, state.survey.pages[4]);
 
   const command = Reflect.get(state, "pending")
     .command as UpdateWorkflowCommand;
@@ -759,7 +759,7 @@ test("Insert workflow targets", async t => {
     });
   t.equal(state.interview, state.participant.interviews[0]);
   t.equal(state.pageSet, state.survey.pageSets[0]);
-  t.equal(state.page, state.survey.pages[3]);
+  t.equal(state.page, state.survey.pages[4]);
 
   const command = Reflect.get(state, "pending")
     .command as InsertWorkflowCommand;
@@ -788,7 +788,7 @@ test("Delete workflow targets", async t => {
     });
   t.equal(state.interview, state.participant.interviews[0]);
   t.equal(state.pageSet, state.survey.pageSets[0]);
-  t.equal(state.page, state.survey.pages[3]);
+  t.equal(state.page, state.survey.pages[4]);
 
   const result = state.apply([]);
   t.equal(result.interview, state.participant.interviews[0]);
@@ -815,7 +815,7 @@ test("Update survey options targets", async t => {
     });
   t.equal(state.interview, state.participant.interviews[0]);
   t.equal(state.pageSet, state.survey.pageSets[0]);
-  t.equal(state.page, state.survey.pages[3]);
+  t.equal(state.page, state.survey.pages[4]);
 
   const command = Reflect.get(state, "pending")
     .command as UpdateSurveyOptionsCommand;

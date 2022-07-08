@@ -17,7 +17,7 @@ function buildTestSurvey() {
     .initial("INIT")
     .followUp("FUP")
     .auxiliary("BIOCH")
-    .end("END");
+    .terminal("END");
   b.workflow("participant").withPageSets("INIT", "FUP");
   b.workflow("INV").withPageSets("INIT", "FUP");
   b.pageSet("SYNT")

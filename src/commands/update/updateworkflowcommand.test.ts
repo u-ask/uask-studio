@@ -23,7 +23,7 @@ function buildTestSurvey() {
     .initial("INIT")
     .followUp("FUP")
     .auxiliary("BIOCH")
-    .end("END");
+    .terminal("END");
   b.workflow("surveycoordinator:pv").notify("incl", "ae");
   b.workflow("participant").withPageSets("INIT", "FUP");
   b.pageSet("SYNT")
@@ -92,7 +92,7 @@ test("Interview items for derived workflow #248", t => {
   const command = new UpdateWorkflowCommand();
   command.start(mutableSurvey, mutableParticipant, 2, 0);
   const interviewItems = Reflect.get(command, "getPartItems").call(command);
-  t.deepLooseEqual(interviewItems[0].value, ["INIT", "FUP"]);
+  t.deepLooseEqual(interviewItems[0].value, ["SYNT", "INIT", "FUP"]);
   t.end();
 });
 
@@ -140,7 +140,7 @@ test("Apply modifications on participant workflow #248", t => {
   const mutableSurvey = new MutableSurvey(survey);
   const mutableParticipant = new MutableParticipant(participant);
   command.apply(mutableSurvey, mutableParticipant, interviewItems);
-  t.equal(mutableSurvey.workflows[2].info, undefined);
+  t.equal(mutableSurvey.workflows[2].info, mutableSurvey.mainWorkflow.info);
   t.equal(
     getTranslation(mutableSurvey.workflows[2].start?.type, "__code__"),
     "INIT"
