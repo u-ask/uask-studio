@@ -1,6 +1,6 @@
 {
   "name": "uask-studio",
-  "version": "1.1.2",
+  "version": "1.2.0",
   "description": "",
   "main": "./dist/studio/index.js",
   "exports": "./dist/studio/index.js",
@@ -49,12 +49,8 @@
     "typedoc": "^0.22.17",
     "typescript": "^4.7.3"
   },
-  "dependencies": {
-    "uask-dom": "^1.1.3",
-    "uask-sys": "^1.1.7"
-  },
   "peerDependencies": {
-    "uask-dom": "^0.1.0",
-    "uask-sys": "^0.1.0"
+    "uask-dom": "^1.2.0",
+    "uask-sys": "^1.2.0"
   }
 }

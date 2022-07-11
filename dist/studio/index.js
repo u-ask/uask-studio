@@ -960,7 +960,8 @@ function libIncludePage(b, name, survey, section) {
         .translate("fr", "Inclure une page existante ?")
         .defaultValue(0)
         .comment("{.studioPage}");
-    const pageChoices = mlChoices(b, "one", survey.pages.map(p => p.name), survey.options);
+    const includeList = survey.pages.filter(p => !survey.mainWorkflow.info.pages.includes(p));
+    const pageChoices = mlChoices(b, "one", includeList.map(p => p.name), survey.options);
     builder
         .question("", "__INCLUDE_PAGE__", pageChoices)
         .translate("en", "Page:")
@@ -968,7 +969,7 @@ function libIncludePage(b, name, survey, section) {
         .required()
         .visibleWhen("__INCLUDE__")
         .comment("{.studioPage.pad}");
-    for (const page of survey.pages)
+    for (const page of includeList)
         buildQuestionSelector(b, builder, page);
     builder
         .question("", "__INCLUDE_CONTEXT__", b.types.integer)
@@ -1483,7 +1484,7 @@ class UpdateWorkflowCommand {
             if (auxiliary)
                 workflowBuilder.auxiliary(...auxiliary);
             if (end)
-                workflowBuilder.end(...end);
+                workflowBuilder.terminal(...end);
         }
         else {
             const nameWithSpec = specifier ? `${name}:${specifier}` : name;
