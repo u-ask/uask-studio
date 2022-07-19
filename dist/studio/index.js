@@ -1,4 +1,4 @@
-import { SurveyBuilder, getItem, Metadata, ContextType, ScoreType, ChoiceType, hasPivot, DomainCollection, InterviewItem, ItemTypes, getTranslation, Library, setMessageIf, update, CrossItemRule, Scope, execute, getScopedItem, getScope, Rules, isML, parseLayout, DomainProxy, MutableSurvey, MutableParticipant, isDomainProxy, ParticipantBuilder } from 'uask-dom';
+import { SurveyBuilder, getItem, Metadata, ContextType, ScoreType, ChoiceType, hasPivot, DomainCollection, InterviewItem, ItemTypes, getTranslation, Library, setMessageIf, update, CrossItemRule, Scope, execute, getScopedItem, getScope, Rules, isML, parseLayout, DomainProxy, MutableSurvey, MutableParticipant, isDomainProxy, ParticipantBuilder, getItemWording } from 'uask-dom';
 import { workflowSerialize, workflowDeserialize, SummaryGenericDriver } from 'uask-sys';
 
 class NullCommand {
@@ -3063,7 +3063,8 @@ class UnfoldSection extends Array {
                     acc.push(i);
                     break;
                 case "table":
-                    acc.push(...new UnfoldTable(i, pageItem));
+                    this.previousTable = new UnfoldTable(i, pageItem, this.previousTable);
+                    acc.push(...this.previousTable);
                     break;
                 case "richItem":
                     acc.push(i);
@@ -3075,58 +3076,71 @@ class UnfoldSection extends Array {
             return acc;
         }, []);
         this.push(...section);
+        Object.defineProperty(this, "previousTable", { enumerable: false });
     }
 }
 class UnfoldTable extends Array {
-    constructor(table, pageItem) {
+    constructor(table, pageItem, currentTable) {
+        var _a;
         super();
-        const rowIndex = table.items.findIndex(i => i.row.find(r => getItem(r === null || r === void 0 ? void 0 : r.item).variableName ==
-            getItem(pageItem).variableName));
-        if (rowIndex != -1)
-            this.push(...new RowWrapper(table, rowIndex));
-        else
-            this.push(table);
+        this.starter = false;
+        if (currentTable === null || currentTable === void 0 ? void 0 : currentTable.starter) {
+            const starter = currentTable[0];
+            const columnCount = starter.items.length == 1 && table.items.length == 1
+                ? starter.columns.length + table.columns.length
+                : starter.items.length > 1
+                    ? starter.columns.length
+                    : table.columns.length;
+            const columns = [...starter.columns, ...table.columns].slice(0, columnCount);
+            starter.columns = columns;
+            const currentRow = starter.items[starter.items.length - 1];
+            currentRow.row = columns.map((_, x) => { var _a; return (_a = currentRow.row[x]) !== null && _a !== void 0 ? _a : null; });
+            const colIndexes = columns.map(c => table.columns.findIndex(c2 => getTranslation(c) == getTranslation(c2)));
+            const items = table.items.map(i => {
+                return {
+                    wording: i.wording,
+                    row: colIndexes.map(x => { var _a; return (_a = i.row[x]) !== null && _a !== void 0 ? _a : null; }),
+                };
+            });
+            if (getTranslation(items[0].wording) == getTranslation(currentRow.wording)) {
+                currentRow.row = columns.map((_, x) => { var _a; return (_a = currentRow.row[x]) !== null && _a !== void 0 ? _a : items[0].row[x]; });
+                items.shift();
+            }
+            if (items.length > 0)
+                this.push({
+                    behavior: "table",
+                    columns: colIndexes.map(i => table.columns[i]),
+                    items,
+                });
+        }
+        else {
+            const lastRow = table.items[table.items.length - 1];
+            const itemIndex = lastRow.row.findIndex(c => (c === null || c === void 0 ? void 0 : c.item) != null &&
+                getItem(c.item).variableName == getItem(pageItem).variableName);
+            if (itemIndex > -1) {
+                const { item, modifiers } = lastRow.row[itemIndex];
+                const newRow = Object.assign(Object.assign({}, lastRow), { row: [...lastRow.row] });
+                newRow.row[itemIndex] = null;
+                this.push({
+                    behavior: "table",
+                    columns: table.columns,
+                    items: [...table.items.slice(0, -1), newRow],
+                });
+                this.push({
+                    behavior: "item",
+                    item: item,
+                    modifiers: Object.assign(Object.assign({}, modifiers), { classes: (_a = modifiers.classes) !== null && _a !== void 0 ? _a : [] }),
+                    labels: {
+                        wording: getItemWording(item),
+                    },
+                });
+                this.starter = true;
+            }
+            else
+                this.push(table);
+        }
+        Object.defineProperty(this, "starter", { enumerable: false });
     }
 }
-class UnfoldRow extends Array {
-    constructor(table, rowIndex) {
-        super();
-        if (rowIndex != 0)
-            super.push(this.getBeforeRowIndex(table, rowIndex));
-        super.push(...this.getExtandedRow(table, rowIndex));
-        if (rowIndex != table.items.length - 1)
-            super.push(this.getAfterRowIndex(table, rowIndex));
-    }
-    getAfterRowIndex(table, rowIndex) {
-        return {
-            behavior: "table",
-            columns: table.columns,
-            items: table.items.slice(rowIndex + 1),
-        };
-    }
-    getExtandedRow(table, rowIndex) {
-        return table.items[rowIndex].row.map(cell => {
-            var _a;
-            const pageItem = cell ? getItem(cell === null || cell === void 0 ? void 0 : cell.item) : undefined;
-            return {
-                behavior: "item",
-                labels: {
-                    comment: pageItem === null || pageItem === void 0 ? void 0 : pageItem.comment,
-                    wording: pageItem === null || pageItem === void 0 ? void 0 : pageItem.wording,
-                },
-                modifiers: { classes: (_a = cell === null || cell === void 0 ? void 0 : cell.modifiers.classes) !== null && _a !== void 0 ? _a : [] },
-                item: cell === null || cell === void 0 ? void 0 : cell.item,
-            };
-        });
-    }
-    getBeforeRowIndex(table, rowIndex) {
-        return {
-            behavior: "table",
-            columns: table.columns,
-            items: table.items.slice(0, rowIndex),
-        };
-    }
-}
-const RowWrapper = UnfoldRow;
 
 export { DeleteItemCommand, DeletePageCommand, DeletePageSetCommand, DeleteWorkflowCommand, InsertItemCommand, InsertPageCommand, InsertPageSetCommand, InsertTableLineCommand, InsertWorkflowCommand, NullCommand, OrderItemCommand, ParticipantState, ParticipantTemplate, StudioDrivers, SurveyState, SurveyTemplate, UnfoldLayout, UniquePageItemRule, UniquePageRule, UniquePageSetRule, UniqueWorkflowRule, UpdateItemCommand, UpdatePageCommand, UpdatePageSetCommand, UpdateSurveyOptionsCommand, UpdateWorkflowCommand, allInRangeSet, allRequiredSet, allUniqueSet, getApplyItem, parseRangeValue };

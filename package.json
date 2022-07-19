@@ -1,6 +1,6 @@
 {
   "name": "uask-studio",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "",
   "main": "./dist/studio/index.js",
   "exports": "./dist/studio/index.js",
