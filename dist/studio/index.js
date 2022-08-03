@@ -1,4 +1,4 @@
-import { SurveyBuilder, getItem, Metadata, ContextType, ScoreType, ChoiceType, hasPivot, DomainCollection, InterviewItem, ItemTypes, getTranslation, Library, setMessageIf, update, CrossItemRule, Scope, execute, getScopedItem, getScope, Rules, isML, parseLayout, DomainProxy, MutableSurvey, MutableParticipant, isDomainProxy, ParticipantBuilder, getItemWording } from 'uask-dom';
+import { setMessageIf, update, isMLstring, Rules, getTranslation, SurveyBuilder, CrossItemRule, getItem, Metadata, ContextType, ScoreType, ChoiceType, hasPivot, DomainCollection, InterviewItem, ItemTypes, Library, Scope, execute, getScopedItem, getScope, isML, parseLayout, DomainProxy, MutableSurvey, MutableParticipant, isDomainProxy, ParticipantBuilder, getItemWording } from 'uask-dom';
 import { workflowSerialize, workflowDeserialize, SummaryGenericDriver } from 'uask-sys';
 
 class NullCommand {
@@ -23,6 +23,9 @@ function allSet(pageItems, interviewItems, ruleName) {
 function allInRangeSet(parts, interviewItems) {
     return allSet(parts, interviewItems, "unique");
 }
+function allLanguagesSet(parts, interviewItems) {
+    return allSet(parts, interviewItems, "allLanguages");
+}
 
 function libApply(b, name, section) {
     const builder = b.page(name);
@@ -39,6 +42,143 @@ function libApply(b, name, section) {
 }
 function getApplyItem(interviewItems) {
     return interviewItems.find(i => i.pageItem.variableName == "__APPLY__");
+}
+
+/******************************************************************************
+Copyright (c) Microsoft Corporation.
+
+Permission to use, copy, modify, and/or distribute this software for any
+purpose with or without fee is hereby granted.
+
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
+REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
+INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+PERFORMANCE OF THIS SOFTWARE.
+***************************************************************************** */
+
+function __rest(s, e) {
+    var t = {};
+    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
+        t[p] = s[p];
+    if (s != null && typeof Object.getOwnPropertySymbols === "function")
+        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
+            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
+                t[p[i]] = s[p[i]];
+        }
+    return t;
+}
+
+function __awaiter(thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+}
+
+class AllLanguagesSetRule {
+    constructor(options) {
+        this.options = options;
+        this.name = "allLanguages";
+        this.precedence = 90;
+    }
+    execute(a) {
+        var _a;
+        const messages = setMessageIf(this.options.languages && ((_a = this.options.languages) === null || _a === void 0 ? void 0 : _a.length) > 1
+            ? this.emptyMlString(a)
+            : a.value != undefined && a.value != "")(a.messages, "allLanguages", "all languages must be set");
+        return update(a, { messages });
+    }
+    emptyMlString(a) {
+        var _a;
+        return (!isMLstring(a.value) ||
+            Object.keys(a.value).length != ((_a = this.options.languages) === null || _a === void 0 ? void 0 : _a.length) ||
+            !!Object.keys(a.value).some(k => a.value[k] == undefined ||
+                a.value[k].trim() == ""));
+    }
+}
+class VariableAndLanguageSetRule {
+    constructor(options) {
+        this.options = options;
+        this.name = "variableAndAllLanguages";
+        this.precedence = 90;
+        this.required = Rules.required();
+        this.allLangs = new AllLanguagesSetRule(this.options);
+    }
+    execute(arg) {
+        const v = arg.value;
+        const _a = arg.messages, messages = __rest(_a, ["required", "allLanguages"]);
+        const result = v.reduce((a, v) => {
+            const r1 = this.required.execute(Object.assign(Object.assign({}, a), { value: v.name }));
+            const r2 = this.allLangs.execute(Object.assign(Object.assign({}, r1), { value: v.label }));
+            return Object.assign(Object.assign({}, r2), { messages: Object.assign(Object.assign({}, a.messages), r2.messages), value: a.value });
+        }, Object.assign(Object.assign({}, arg), { messages }));
+        return update(arg, result);
+    }
+}
+class UniquePageItemRule {
+    constructor(survey) {
+        this.survey = survey;
+        this.name = "unique";
+        this.precedence = 100;
+    }
+    execute(a) {
+        const messages = setMessageIf(!!this.survey.items.find(i => i.variableName == a.value))(a.messages, "unique", "variable name must be unique");
+        return update(a, { messages });
+    }
+}
+class UniquePageRule {
+    constructor(survey, page) {
+        this.survey = survey;
+        this.page = page;
+        this.name = "unique";
+        this.precedence = 100;
+    }
+    execute(a) {
+        const messages = setMessageIf(this.pageAlreadyExist(a.value))(a.messages, "unique", "page name must be unique");
+        return update(a, { messages });
+    }
+    pageAlreadyExist(pageCode) {
+        return !!this.survey.pages.find(p => getTranslation(p.name, "__code__", this.survey.options.defaultLang) ==
+            pageCode);
+    }
+}
+class UniquePageSetRule {
+    constructor(survey, pageSet) {
+        this.survey = survey;
+        this.pageSet = pageSet;
+        this.name = "unique";
+        this.precedence = 100;
+    }
+    execute(a) {
+        const messages = setMessageIf(this.pageSetAlreadyExist(a.value))(a.messages, "unique", "page set code must be unique");
+        return update(a, { messages });
+    }
+    pageSetAlreadyExist(pageSetCode) {
+        return !!this.survey.pageSets.find(p => getTranslation(p.type, "__code__", this.survey.options.defaultLang) ==
+            pageSetCode);
+    }
+}
+class UniqueWorkflowRule {
+    constructor(survey, workflow) {
+        this.survey = survey;
+        this.workflow = workflow;
+        this.name = "unique";
+        this.precedence = 100;
+    }
+    execute(names, spec) {
+        const messages = setMessageIf(this.workflowAlreadyExist(names.value, spec.value))(spec.messages, "unique", "workflow name:specifier must be unique");
+        return [names, update(spec, { messages: Object.assign({}, messages) })];
+    }
+    workflowAlreadyExist(names, spec) {
+        const namesWithWpec = names === null || names === void 0 ? void 0 : names.map(name => `${name}${spec ? `:${spec}` : ""}`);
+        return this.survey.workflows.some(w => namesWithWpec === null || namesWithWpec === void 0 ? void 0 : namesWithWpec.includes(w.name));
+    }
 }
 
 function isOptions(o) {
@@ -357,11 +497,15 @@ function getAllItemTypesLabel(lang) {
 }
 
 class UpdateItemCommand {
-    buildParts(section, context) {
+    buildParts(survey, section, context) {
+        var _a;
         const builder = new SurveyBuilder();
         libUpdateItem(builder, "updateItem", { section, context });
         libApply(builder, "apply", section);
         this.parts = builder.get();
+        this.parts = this.parts.update({
+            crossRules: (_a = this.parts) === null || _a === void 0 ? void 0 : _a.crossRules.append(new CrossItemRule(this.wordingPart, new AllLanguagesSetRule(survey.options)))
+        });
     }
     get itemParts() {
         var _a;
@@ -568,7 +712,7 @@ class UpdateItemCommand {
         this.hasContext =
             Array.isArray(this.pageItem.wording) ||
                 this.pageItem instanceof ContextType;
-        this.buildParts(this.pageItem.section, this.hasContext);
+        this.buildParts(survey, this.pageItem.section, this.hasContext);
         survey.insertItems(pageIndex, index + 1, [...(_a = this.parts) === null || _a === void 0 ? void 0 : _a.items], [...(_b = this.parts) === null || _b === void 0 ? void 0 : _b.crossRules]);
         participant.updatePageSets(survey.pageSets);
         participant.insertItems(this.getPartItems());
@@ -929,7 +1073,7 @@ class UpdateItemCommand {
     canApply(survey, interviewItems) {
         var _a;
         const allParts = [...(_a = this.parts) === null || _a === void 0 ? void 0 : _a.items];
-        return allRequiredSet(allParts, interviewItems);
+        return allRequiredSet(allParts, interviewItems) && allLanguagesSet(allParts, interviewItems);
     }
 }
 function parseRangeValue(rangeValue) {
@@ -1775,17 +1919,6 @@ function libInsertItem(b, name, section) {
     return builder;
 }
 
-class UniquePageItemRule {
-    constructor(survey) {
-        this.survey = survey;
-        this.name = "unique";
-        this.precedence = 100;
-    }
-    execute(a) {
-        const messages = setMessageIf(!!this.survey.items.find(i => i.variableName == a.value))(a.messages, "unique", "variable name must be unique");
-        return update(a, { messages });
-    }
-}
 class InsertItemCommand {
     constructor() {
         this.updateCommand = new UpdateItemCommand();
@@ -1890,22 +2023,6 @@ function libInsertPage(b, name, section) {
     return builder;
 }
 
-class UniquePageRule {
-    constructor(survey, page) {
-        this.survey = survey;
-        this.page = page;
-        this.name = "unique";
-        this.precedence = 100;
-    }
-    execute(a) {
-        const messages = setMessageIf(this.pageAlreadyExist(a.value))(a.messages, "unique", "page name must be unique");
-        return update(a, { messages });
-    }
-    pageAlreadyExist(pageCode) {
-        return !!this.survey.pages.find(p => getTranslation(p.name, "__code__", this.survey.options.defaultLang) ==
-            pageCode);
-    }
-}
 class InsertPageCommand {
     constructor() {
         this.updateCommand = new UpdatePageCommand();
@@ -2006,22 +2123,6 @@ function libInsertPageSet(b, name, section) {
     return builder;
 }
 
-class UniquePageSetRule {
-    constructor(survey, pageSet) {
-        this.survey = survey;
-        this.pageSet = pageSet;
-        this.name = "unique";
-        this.precedence = 100;
-    }
-    execute(a) {
-        const messages = setMessageIf(this.pageSetAlreadyExist(a.value))(a.messages, "unique", "page set code must be unique");
-        return update(a, { messages });
-    }
-    pageSetAlreadyExist(pageSetCode) {
-        return !!this.survey.pageSets.find(p => getTranslation(p.type, "__code__", this.survey.options.defaultLang) ==
-            pageSetCode);
-    }
-}
 class InsertPageSetCommand {
     constructor() {
         this.updateCommand = new UpdatePageSetCommand();
@@ -2128,22 +2229,6 @@ function libInsertDerivedWorkflow(b, name, survey, section) {
     return builder;
 }
 
-class UniqueWorkflowRule {
-    constructor(survey, workflow) {
-        this.survey = survey;
-        this.workflow = workflow;
-        this.name = "unique";
-        this.precedence = 100;
-    }
-    execute(names, spec) {
-        const messages = setMessageIf(this.workflowAlreadyExist(names.value, spec.value))(spec.messages, "unique", "workflow name:specifier must be unique");
-        return [names, update(spec, { messages: Object.assign({}, messages) })];
-    }
-    workflowAlreadyExist(names, spec) {
-        const namesWithWpec = names === null || names === void 0 ? void 0 : names.map(name => `${name}${spec ? `:${spec}` : ""}`);
-        return this.survey.workflows.some(w => namesWithWpec === null || namesWithWpec === void 0 ? void 0 : namesWithWpec.includes(w.name));
-    }
-}
 class InsertWorkflowCommand {
     constructor() {
         this.updateCommand = new UpdateWorkflowCommand();
@@ -2241,7 +2326,6 @@ function libInsertTableLine(b, name, section, table) {
         .question("__COLUMN_NAMES__", b.types.text)
         .translate("en", "Columns : ")
         .translate("fr", "Colonnes : ")
-        .required()
         .comment("{.studio.studioItem.studioChoiceInput.variableName}");
     if (section)
         builder.endSection();
@@ -2254,6 +2338,9 @@ class InsertTableLineCommand {
         libInsertTableLine(builder, "insertTableLine", section, table);
         libApply(builder, "apply", section);
         this.parts = builder.get();
+        this.parts = this.parts.update({
+            crossRules: this.parts.crossRules.append(new CrossItemRule(this.lineNamePart, new AllLanguagesSetRule(survey.options)), new CrossItemRule(this.columnNamesPart, new VariableAndLanguageSetRule(survey.options))),
+        });
     }
     get columnNamesPart() {
         var _a;
@@ -2302,7 +2389,7 @@ class InsertTableLineCommand {
         if (!table)
             return DomainCollection(new InterviewItem(this.positionPart, 1));
         const columnNames = table
-            ? table.columns.map(c => ({ name: "", label: c }))
+            ? table.columns.map(c => ({ name: undefined, label: c }))
             : [];
         return DomainCollection(new InterviewItem(this.positionPart, table.items.length + 1), new InterviewItem(this.columnNamesPart, columnNames));
     }
@@ -2340,9 +2427,10 @@ class InsertTableLineCommand {
         return { insertedItems, insertedRules: [] };
     }
     canApply(survey, interviewItems) {
-        var _a, _b;
+        var _a, _b, _c;
         return (allRequiredSet([...(_a = this.parts) === null || _a === void 0 ? void 0 : _a.items], interviewItems) &&
-            allInRangeSet([...(_b = this.parts) === null || _b === void 0 ? void 0 : _b.items], interviewItems));
+            allInRangeSet([...(_b = this.parts) === null || _b === void 0 ? void 0 : _b.items], interviewItems) &&
+            allLanguagesSet([...(_c = this.parts) === null || _c === void 0 ? void 0 : _c.items], interviewItems));
     }
 }
 
@@ -2850,31 +2938,6 @@ class ParticipantState {
     }
 }
 
-/******************************************************************************
-Copyright (c) Microsoft Corporation.
-
-Permission to use, copy, modify, and/or distribute this software for any
-purpose with or without fee is hereby granted.
-
-THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
-REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
-AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
-INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
-LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
-OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
-PERFORMANCE OF THIS SOFTWARE.
-***************************************************************************** */
-
-function __awaiter(thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-}
-
 class InterviewStudioDriver {
     constructor(driver, surveyDriver) {
         this.driver = driver;
@@ -3080,67 +3143,89 @@ class UnfoldSection extends Array {
     }
 }
 class UnfoldTable extends Array {
-    constructor(table, pageItem, currentTable) {
-        var _a;
+    constructor(table, pageItem, knownTable) {
         super();
-        this.starter = false;
-        if (currentTable === null || currentTable === void 0 ? void 0 : currentTable.starter) {
-            const starter = currentTable[0];
-            const columnCount = starter.items.length == 1 && table.items.length == 1
-                ? starter.columns.length + table.columns.length
-                : starter.items.length > 1
-                    ? starter.columns.length
-                    : table.columns.length;
-            const columns = [...starter.columns, ...table.columns].slice(0, columnCount);
-            starter.columns = columns;
-            const currentRow = starter.items[starter.items.length - 1];
-            currentRow.row = columns.map((_, x) => { var _a; return (_a = currentRow.row[x]) !== null && _a !== void 0 ? _a : null; });
-            const colIndexes = columns.map(c => table.columns.findIndex(c2 => getTranslation(c) == getTranslation(c2)));
-            const items = table.items.map(i => {
-                return {
-                    wording: i.wording,
-                    row: colIndexes.map(x => { var _a; return (_a = i.row[x]) !== null && _a !== void 0 ? _a : null; }),
-                };
-            });
-            if (getTranslation(items[0].wording) == getTranslation(currentRow.wording)) {
-                currentRow.row = columns.map((_, x) => { var _a; return (_a = currentRow.row[x]) !== null && _a !== void 0 ? _a : items[0].row[x]; });
-                items.shift();
-            }
-            if (items.length > 0)
-                this.push({
-                    behavior: "table",
-                    columns: colIndexes.map(i => table.columns[i]),
-                    items,
-                });
-        }
-        else {
-            const lastRow = table.items[table.items.length - 1];
-            const itemIndex = lastRow.row.findIndex(c => (c === null || c === void 0 ? void 0 : c.item) != null &&
-                getItem(c.item).variableName == getItem(pageItem).variableName);
+        this.firstPart = false;
+        if (!(knownTable === null || knownTable === void 0 ? void 0 : knownTable.firstPart)) {
+            const itemIndex = this.getItemIndex(table, pageItem);
             if (itemIndex > -1) {
-                const { item, modifiers } = lastRow.row[itemIndex];
-                const newRow = Object.assign(Object.assign({}, lastRow), { row: [...lastRow.row] });
-                newRow.row[itemIndex] = null;
-                this.push({
-                    behavior: "table",
-                    columns: table.columns,
-                    items: [...table.items.slice(0, -1), newRow],
-                });
-                this.push({
-                    behavior: "item",
-                    item: item,
-                    modifiers: Object.assign(Object.assign({}, modifiers), { classes: (_a = modifiers.classes) !== null && _a !== void 0 ? _a : [] }),
-                    labels: {
-                        wording: getItemWording(item),
-                    },
-                });
-                this.starter = true;
+                this.firstPart = true;
+                this.push(new UnfoldTableFirstPart(table, itemIndex));
+                this.push(new ExtractItem(table, itemIndex));
             }
             else
                 this.push(table);
         }
+        else {
+            const firstPart = knownTable[0];
+            firstPart.setColumnSubset(table);
+            const secondPart = new UnfoldTableSecondPart(table, firstPart.columns);
+            if (firstPart.hasCommonRow(secondPart))
+                firstPart.shiftCommonRow(secondPart);
+            if (secondPart.items.length > 0)
+                this.push(secondPart);
+        }
         Object.defineProperty(this, "starter", { enumerable: false });
+    }
+    getItemIndex(table, pageItem) {
+        const lastRow = table.items[table.items.length - 1];
+        return lastRow.row.findIndex(c => (c === null || c === void 0 ? void 0 : c.item) != null &&
+            getItem(c.item).variableName == getItem(pageItem).variableName);
+    }
+}
+class UnfoldTableSecondPart {
+    constructor(table, columns) {
+        this.behavior = "table";
+        const colIndexes = columns.map(c => table.columns.findIndex(c2 => getTranslation(c) == getTranslation(c2)));
+        this.items = table.items.map(i => {
+            return {
+                wording: i.wording,
+                row: colIndexes.map(x => { var _a; return (_a = i.row[x]) !== null && _a !== void 0 ? _a : null; }),
+            };
+        });
+        this.columns = colIndexes.map(i => table.columns[i]);
+    }
+}
+class ExtractItem {
+    constructor(table, itemIndex) {
+        var _a;
+        this.behavior = "item";
+        const lastRow = table.items[table.items.length - 1];
+        const { item, modifiers } = lastRow.row[itemIndex];
+        this.item = item;
+        this.modifiers = Object.assign(Object.assign({}, modifiers), { classes: (_a = modifiers.classes) !== null && _a !== void 0 ? _a : [] });
+        this.labels = {
+            wording: getItemWording(item),
+        };
+    }
+}
+class UnfoldTableFirstPart {
+    constructor(table, itemIndex) {
+        this.behavior = "table";
+        const lastRow = table.items[table.items.length - 1];
+        const newRow = Object.assign(Object.assign({}, lastRow), { row: [...lastRow.row] });
+        newRow.row[itemIndex] = null;
+        this.columns = table.columns;
+        this.items = [...table.items.slice(0, -1), newRow];
+        this.currentRow = this.items[this.items.length - 1];
+        Object.defineProperty(this, "currentRow", { enumerable: false });
+    }
+    hasCommonRow(reorderedTable) {
+        return (getTranslation(reorderedTable.items[0].wording) ==
+            getTranslation(this.currentRow.wording));
+    }
+    shiftCommonRow(reorderedTable) {
+        this.currentRow.row = this.columns.map((_, x) => { var _a; return (_a = this.currentRow.row[x]) !== null && _a !== void 0 ? _a : reorderedTable.items[0].row[x]; });
+        reorderedTable.items.shift();
+    }
+    setColumnSubset(table) {
+        const columnCount = this.items.length == 1 && table.items.length == 1
+            ? this.columns.length + table.columns.length
+            : this.items.length > 1
+                ? this.columns.length
+                : table.columns.length;
+        this.columns = [...this.columns, ...table.columns].slice(0, columnCount);
     }
 }
 
-export { DeleteItemCommand, DeletePageCommand, DeletePageSetCommand, DeleteWorkflowCommand, InsertItemCommand, InsertPageCommand, InsertPageSetCommand, InsertTableLineCommand, InsertWorkflowCommand, NullCommand, OrderItemCommand, ParticipantState, ParticipantTemplate, StudioDrivers, SurveyState, SurveyTemplate, UnfoldLayout, UniquePageItemRule, UniquePageRule, UniquePageSetRule, UniqueWorkflowRule, UpdateItemCommand, UpdatePageCommand, UpdatePageSetCommand, UpdateSurveyOptionsCommand, UpdateWorkflowCommand, allInRangeSet, allRequiredSet, allUniqueSet, getApplyItem, parseRangeValue };
+export { DeleteItemCommand, DeletePageCommand, DeletePageSetCommand, DeleteWorkflowCommand, InsertItemCommand, InsertPageCommand, InsertPageSetCommand, InsertTableLineCommand, InsertWorkflowCommand, NullCommand, OrderItemCommand, ParticipantState, ParticipantTemplate, StudioDrivers, SurveyState, SurveyTemplate, UnfoldLayout, UpdateItemCommand, UpdatePageCommand, UpdatePageSetCommand, UpdateSurveyOptionsCommand, UpdateWorkflowCommand, allInRangeSet, allLanguagesSet, allRequiredSet, allUniqueSet, getApplyItem, parseRangeValue };

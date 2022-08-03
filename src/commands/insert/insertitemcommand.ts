@@ -11,10 +11,6 @@ import {
   getScope,
   Rules,
   RuleName,
-  UnitRule,
-  HasValue,
-  setMessageIf,
-  update,
   MutableParticipant,
   execute,
   Scope,
@@ -24,18 +20,7 @@ import {
 import { allUniqueSet, allRequiredSet, IMutationCommand } from "../command.js";
 import { libInsertItem } from "./libinsertitem.js";
 import { UpdateItemCommand } from "../update/updateitemcommand.js";
-
-export class UniquePageItemRule implements UnitRule {
-  constructor(readonly survey: Survey) {}
-  execute(a: HasValue): HasValue {
-    const messages = setMessageIf(
-      !!this.survey.items.find(i => i.variableName == a.value)
-    )(a.messages, "unique", "variable name must be unique");
-    return update(a, { messages });
-  }
-  name = "unique";
-  precedence = 100;
-}
+import { UniquePageItemRule } from "../rules.js";
 
 export class InsertItemCommand implements IMutationCommand {
   pageIndex?: number;

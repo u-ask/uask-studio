@@ -6,6 +6,7 @@ import {
   Item,
   ItemContent,
   LayoutSection,
+  mlstring,
   RecordsetContent,
   RichItemContent,
   TableContent,
@@ -58,83 +59,132 @@ export class UnfoldSection extends Array<LayoutContent> {
 }
 
 export class UnfoldTable extends Array<TableContent<Item> | ItemContent<Item>> {
-  starter = false;
+  firstPart = false;
 
   constructor(
     table: TableContent<Item<"prototype" | "instance">>,
     pageItem: Item,
-    currentTable: UnfoldTable | undefined
+    knownTable: UnfoldTable | undefined
   ) {
     super();
-    if (currentTable?.starter) {
-      const starter = currentTable[0] as TableContent<Item>;
-      const columnCount =
-        starter.items.length == 1 && table.items.length == 1
-          ? starter.columns.length + table.columns.length
-          : starter.items.length > 1
-          ? starter.columns.length
-          : table.columns.length;
-      const columns = [...starter.columns, ...table.columns].slice(
-        0,
-        columnCount
-      );
-      starter.columns = columns;
-      const currentRow = starter.items[starter.items.length - 1];
-      currentRow.row = columns.map((_, x) => currentRow.row[x] ?? null);
-
-      const colIndexes = columns.map(c =>
-        table.columns.findIndex(c2 => getTranslation(c) == getTranslation(c2))
-      );
-      const items = table.items.map(i => {
-        return {
-          wording: i.wording,
-          row: colIndexes.map(x => i.row[x] ?? null),
-        };
-      });
-      if (
-        getTranslation(items[0].wording) == getTranslation(currentRow.wording)
-      ) {
-        currentRow.row = columns.map(
-          (_, x) => currentRow.row[x] ?? items[0].row[x]
-        );
-        items.shift();
-      }
-      if (items.length > 0)
-        this.push({
-          behavior: "table",
-          columns: colIndexes.map(i => table.columns[i]),
-          items,
-        });
-    } else {
-      const lastRow = table.items[table.items.length - 1];
-      const itemIndex = lastRow.row.findIndex(
-        c =>
-          c?.item != null &&
-          getItem(c.item).variableName == getItem(pageItem).variableName
-      );
+    if (!knownTable?.firstPart) {
+      const itemIndex = this.getItemIndex(table, pageItem);
       if (itemIndex > -1) {
-        const { item, modifiers } = lastRow.row[itemIndex] as {
-          item: Item;
-          modifiers: { classes: string[] };
-        };
-        const newRow = { ...lastRow, row: [...lastRow.row] };
-        newRow.row[itemIndex] = null;
-        this.push({
-          behavior: "table",
-          columns: table.columns,
-          items: [...table.items.slice(0, -1), newRow],
-        });
-        this.push({
-          behavior: "item",
-          item: item,
-          modifiers: { ...modifiers, classes: modifiers.classes ?? [] },
-          labels: {
-            wording: getItemWording(item),
-          },
-        });
-        this.starter = true;
+        this.firstPart = true;
+        this.push(new UnfoldTableFirstPart(table, itemIndex));
+        this.push(new ExtractItem(table, itemIndex));
       } else this.push(table);
+    } else {
+      const firstPart = knownTable[0] as UnfoldTableFirstPart;
+      firstPart.setColumnSubset(table);
+
+      const secondPart = new UnfoldTableSecondPart(table, firstPart.columns);
+      if (firstPart.hasCommonRow(secondPart))
+        firstPart.shiftCommonRow(secondPart);
+
+      if (secondPart.items.length > 0) this.push(secondPart);
     }
     Object.defineProperty(this, "starter", { enumerable: false });
+  }
+
+  private getItemIndex(
+    table: TableContent<Item<"prototype" | "instance">>,
+    pageItem: Item<"prototype" | "instance">
+  ) {
+    const lastRow = table.items[table.items.length - 1];
+    return lastRow.row.findIndex(
+      c =>
+        c?.item != null &&
+        getItem(c.item).variableName == getItem(pageItem).variableName
+    );
+  }
+}
+
+class UnfoldTableSecondPart implements TableContent<Item> {
+  behavior: "table" = "table";
+  columns: mlstring[];
+  items: TableContent<Item>["items"];
+
+  constructor(
+    table: TableContent<Item<"prototype" | "instance">>,
+    columns: mlstring[]
+  ) {
+    const colIndexes = columns.map(c =>
+      table.columns.findIndex(c2 => getTranslation(c) == getTranslation(c2))
+    );
+    this.items = table.items.map(i => {
+      return {
+        wording: i.wording,
+        row: colIndexes.map(x => i.row[x] ?? null),
+      };
+    });
+    this.columns = colIndexes.map(i => table.columns[i]);
+  }
+}
+
+class ExtractItem implements ItemContent<Item> {
+  behavior: "item" = "item";
+  labels: ItemContent<Item>["labels"];
+  modifiers: ItemContent<Item>["modifiers"];
+  item: Item;
+
+  constructor(
+    table: TableContent<Item<"prototype" | "instance">>,
+    itemIndex: number
+  ) {
+    const lastRow = table.items[table.items.length - 1];
+    const { item, modifiers } = lastRow.row[itemIndex] as {
+      item: Item;
+      modifiers: { classes: string[] };
+    };
+    this.item = item;
+    this.modifiers = { ...modifiers, classes: modifiers.classes ?? [] };
+    this.labels = {
+      wording: getItemWording(item),
+    };
+  }
+}
+
+class UnfoldTableFirstPart implements TableContent<Item> {
+  behavior: "table" = "table";
+  columns: mlstring[];
+  items: TableContent<Item>["items"];
+  private currentRow: typeof this.items[0];
+
+  constructor(
+    table: TableContent<Item<"prototype" | "instance">>,
+    itemIndex: number
+  ) {
+    const lastRow = table.items[table.items.length - 1];
+    const newRow = { ...lastRow, row: [...lastRow.row] };
+    newRow.row[itemIndex] = null;
+    this.columns = table.columns;
+    this.items = [...table.items.slice(0, -1), newRow];
+    this.currentRow = this.items[this.items.length - 1];
+    Object.defineProperty(this, "currentRow", { enumerable: false });
+  }
+
+  hasCommonRow(reorderedTable: UnfoldTableSecondPart) {
+    return (
+      getTranslation(reorderedTable.items[0].wording) ==
+      getTranslation(this.currentRow.wording)
+    );
+  }
+
+  shiftCommonRow(reorderedTable: UnfoldTableSecondPart) {
+    this.currentRow.row = this.columns.map(
+      (_, x) => this.currentRow.row[x] ?? reorderedTable.items[0].row[x]
+    );
+    reorderedTable.items.shift();
+  }
+
+  setColumnSubset(table: TableContent<Item>) {
+    const columnCount =
+      this.items.length == 1 && table.items.length == 1
+        ? this.columns.length + table.columns.length
+        : this.items.length > 1
+        ? this.columns.length
+        : table.columns.length;
+    this.columns = [...this.columns, ...table.columns].slice(0, columnCount);
   }
 }

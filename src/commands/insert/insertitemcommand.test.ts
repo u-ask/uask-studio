@@ -13,7 +13,7 @@ import {
   SurveyBuilder,
 } from "uask-dom";
 import test from "tape";
-import { InsertItemCommand, UniquePageItemRule } from "./insertitemcommand.js";
+import { InsertItemCommand } from "./insertitemcommand.js";
 import { UpdateItemCommand } from "../update/updateitemcommand.js";
 import { getStudioItems, isConsistent } from "../test-utils.js";
 
@@ -79,7 +79,12 @@ test("Apply item creation", t => {
     command,
     "updateCommand"
   ) as UpdateItemCommand;
-  command.start(new MutableSurvey(survey), new MutableParticipant(participant), 0, 0);
+  command.start(
+    new MutableSurvey(survey),
+    new MutableParticipant(participant),
+    0,
+    0
+  );
   const interviewItems = [
     new InterviewItem(command.variableNamePart, "Q0"),
     new InterviewItem(updateCommand.wordingPart, "item"),
@@ -105,7 +110,12 @@ test("Apply record item creation", t => {
     command,
     "updateCommand"
   ) as UpdateItemCommand;
-  command.start(new MutableSurvey(survey), new MutableParticipant(participant), 0, 0);
+  command.start(
+    new MutableSurvey(survey),
+    new MutableParticipant(participant),
+    0,
+    0
+  );
   const interviewItems = [
     new InterviewItem(command.variableNamePart, "Q0"),
     new InterviewItem(command.isRecordPart, 1),
@@ -124,14 +134,6 @@ test("Apply record item creation", t => {
     fr: " -> enregistrement",
   });
   t.true(isConsistent(mutableSurvey, mutableParticipant));
-  t.end();
-});
-
-test("Create unique page item rule #97", t => {
-  const { survey } = buildTestSurvey();
-  const uniqueRule = new UniquePageItemRule(survey);
-  const exec = uniqueRule.execute({ value: "Q1" });
-  t.deepLooseEqual(exec.messages, { unique: "variable name must be unique" });
   t.end();
 });
 

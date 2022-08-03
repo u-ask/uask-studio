@@ -1,10 +1,16 @@
 import {
+  CrossItemRule,
+  DomainCollection,
+  execute,
   getItem,
+  IDomainCollection,
+  Interview,
   InterviewItem,
   MutableParticipant,
   MutableSurvey,
   PageItem,
   ParticipantBuilder,
+  Scope,
   SurveyBuilder,
 } from "uask-dom";
 import { InsertTableLineCommand } from "./inserttablelinecommand.js";
@@ -57,8 +63,8 @@ test("Interview items for insert table line after table #303", t => {
   const interviewItems = getStudioItems(mutableParticipant, participant);
   t.equal(getItem(mutableSurvey.pages[1].items[4]).rules.length, 1);
   t.deepLooseEqual(interviewItems[1]?.value, [
-    { name: "", label: "col1" },
-    { name: "", label: "col2" },
+    { name: undefined, label: "col1" },
+    { name: undefined, label: "col2" },
   ]);
   t.end();
 });
@@ -137,5 +143,107 @@ test("Apply new table line multiLang modification #303", t => {
     en: "row2 -> col2",
     fr: "ligne2 -> col2",
   });
+  t.end();
+});
+
+test("Command appliable with all languages for line header (empty string) rule #414", t => {
+  const { survey, participant } = buildTestSurvey();
+  const command = new InsertTableLineCommand();
+  const mutableSurvey = new MutableSurvey(survey);
+  const mutablePatient = new MutableParticipant(participant);
+  command.start(mutableSurvey, mutablePatient, 0, 2);
+  const items = getStudioItems(mutablePatient, participant);
+  const ruleViolation = items.append(
+    new InterviewItem(command.lineNamePart, { en: " ", fr: "Ligne" })
+  );
+  const global = Scope.create(
+    DomainCollection(new Interview(survey.pageSets[0], {})),
+    new Interview(survey.pageSets[0], {})
+  );
+  const scope = global.with([...ruleViolation]);
+  const result = execute(
+    command.parts?.crossRules as IDomainCollection<CrossItemRule>,
+    scope
+  ).items;
+  t.deepLooseEqual(result[result.length - 1].messages, {
+    allLanguages: "all languages must be set",
+  });
+  t.false(command.canApply(mutableSurvey, result));
+  t.end();
+});
+
+test("Command appliable with all languages for line header (undefined string) rule #414", t => {
+  const { survey, participant } = buildTestSurvey();
+  const command = new InsertTableLineCommand();
+  const mutableSurvey = new MutableSurvey(survey);
+  const mutablePatient = new MutableParticipant(participant);
+  command.start(mutableSurvey, mutablePatient, 0, 2);
+  const items = getStudioItems(mutablePatient, participant);
+  const ruleViolation = items.append(
+    new InterviewItem(command.lineNamePart, { en: undefined, fr: "Ligne" })
+  );
+  const global = Scope.create(
+    DomainCollection(new Interview(survey.pageSets[0], {})),
+    new Interview(survey.pageSets[0], {})
+  );
+  const scope = global.with([...ruleViolation]);
+  const result = execute(
+    command.parts?.crossRules as IDomainCollection<CrossItemRule>,
+    scope
+  ).items;
+  t.deepLooseEqual(result[result.length - 1].messages, {
+    allLanguages: "all languages must be set",
+  });
+  t.false(command.canApply(mutableSurvey, result));
+  t.end();
+});
+
+test("Command appliable with all languages for line header (missing lang) rule #414", t => {
+  const { survey, participant } = buildTestSurvey();
+  const command = new InsertTableLineCommand();
+  const mutableSurvey = new MutableSurvey(survey);
+  const mutablePatient = new MutableParticipant(participant);
+  command.start(mutableSurvey, mutablePatient, 0, 2);
+  const items = getStudioItems(mutablePatient, participant);
+  const ruleViolation = items.append(
+    new InterviewItem(command.lineNamePart, { fr: "Ligne" })
+  );
+  const global = Scope.create(
+    DomainCollection(new Interview(survey.pageSets[0], {})),
+    new Interview(survey.pageSets[0], {})
+  );
+  const scope = global.with([...ruleViolation]);
+  const result = execute(
+    command.parts?.crossRules as IDomainCollection<CrossItemRule>,
+    scope
+  ).items;
+  t.deepLooseEqual(result[result.length - 1].messages, {
+    allLanguages: "all languages must be set",
+  });
+  t.false(command.canApply(mutableSurvey, result));
+  t.end();
+});
+
+test("Command appliable with all languages for line header (no violation) rule #414", t => {
+  const { survey, participant } = buildTestSurvey();
+  const command = new InsertTableLineCommand();
+  const mutableSurvey = new MutableSurvey(survey);
+  const mutablePatient = new MutableParticipant(participant);
+  command.start(mutableSurvey, mutablePatient, 0, 2);
+  const items = getStudioItems(mutablePatient, participant);
+  const ruleViolation = items.append(
+    new InterviewItem(command.lineNamePart, { en: "Line", fr: "Ligne" })
+  );
+  const global = Scope.create(
+    DomainCollection(new Interview(survey.pageSets[0], {})),
+    new Interview(survey.pageSets[0], {})
+  );
+  const scope = global.with([...ruleViolation]);
+  const result = execute(
+    command.parts?.crossRules as IDomainCollection<CrossItemRule>,
+    scope
+  ).items;
+  t.deepLooseEqual(result[result.length - 1].messages, {});
+  t.true(command.canApply(mutableSurvey, result));
   t.end();
 });

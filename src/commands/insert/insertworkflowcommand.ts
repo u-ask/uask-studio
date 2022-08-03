@@ -1,9 +1,7 @@
 import {
   CrossItemRule,
-  CrossRule,
   DomainCollection,
   execute,
-  HasValue,
   IDomainCollection,
   InterviewItem,
   mlstring,
@@ -11,37 +9,15 @@ import {
   MutableSurvey,
   PageItem,
   Scope,
-  setMessageIf,
   Survey,
   SurveyBuilder,
-  update,
   Workflow,
   WorkflowBuilder,
 } from "uask-dom";
 import { allRequiredSet, allUniqueSet, IMutationCommand } from "../command.js";
+import { UniqueWorkflowRule } from "../rules.js";
 import { UpdateWorkflowCommand } from "../update/updateworkflowcommand.js";
 import { libInsertDerivedWorkflow } from "./libinsertderivedworkflow.js";
-
-export class UniqueWorkflowRule implements CrossRule {
-  constructor(readonly survey: Survey, readonly workflow: Workflow) {}
-
-  execute(names: HasValue, spec: HasValue): [HasValue, HasValue] {
-    const messages = setMessageIf(
-      this.workflowAlreadyExist(names.value as string[], spec.value as string)
-    )(spec.messages, "unique", "workflow name:specifier must be unique");
-    return [names, update(spec, { messages: { ...messages } })];
-  }
-
-  workflowAlreadyExist(names: string[], spec: string): boolean {
-    const namesWithWpec = names?.map(
-      name => `${name}${spec ? `:${spec}` : ""}`
-    );
-    return this.survey.workflows.some(w => namesWithWpec?.includes(w.name));
-  }
-
-  name = "unique";
-  precedence = 100;
-}
 
 export class InsertWorkflowCommand implements IMutationCommand {
   pageSetIndex?: number;

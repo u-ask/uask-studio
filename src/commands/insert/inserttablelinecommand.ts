@@ -17,8 +17,14 @@ import {
   SurveyBuilder,
   TableContent,
 } from "uask-dom";
-import { allInRangeSet, allRequiredSet, IMutationCommand } from "../command.js";
+import {
+  allInRangeSet,
+  allLanguagesSet,
+  allRequiredSet,
+  IMutationCommand,
+} from "../command.js";
 import { libApply } from "../libapply.js";
+import { AllLanguagesSetRule, VariableAndLanguageSetRule } from "../rules.js";
 import { libInsertTableLine } from "./libinserttableline.js";
 
 export class InsertTableLineCommand implements IMutationCommand {
@@ -38,6 +44,18 @@ export class InsertTableLineCommand implements IMutationCommand {
     libInsertTableLine(builder, "insertTableLine", section, table);
     libApply(builder, "apply", section);
     this.parts = builder.get();
+    this.parts = this.parts.update({
+      crossRules: this.parts.crossRules.append(
+        new CrossItemRule(
+          this.lineNamePart,
+          new AllLanguagesSetRule(survey.options)
+        ),
+        new CrossItemRule(
+          this.columnNamesPart,
+          new VariableAndLanguageSetRule(survey.options)
+        )
+      ),
+    });
   }
 
   get columnNamesPart(): PageItem {
@@ -117,7 +135,7 @@ export class InsertTableLineCommand implements IMutationCommand {
     if (!table)
       return DomainCollection(new InterviewItem(this.positionPart, 1));
     const columnNames = table
-      ? table.columns.map(c => ({ name: "", label: c }))
+      ? table.columns.map(c => ({ name: undefined, label: c }))
       : [];
     return DomainCollection(
       new InterviewItem(this.positionPart, table.items.length + 1),
@@ -220,6 +238,10 @@ export class InsertTableLineCommand implements IMutationCommand {
         interviewItems
       ) &&
       allInRangeSet(
+        [...(this.parts?.items as IDomainCollection<PageItem>)],
+        interviewItems
+      ) &&
+      allLanguagesSet(
         [...(this.parts?.items as IDomainCollection<PageItem>)],
         interviewItems
       )

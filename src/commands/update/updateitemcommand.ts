@@ -22,8 +22,9 @@ import {
   MutableParticipant,
   ContextType,
 } from "uask-dom";
-import { allRequiredSet, IMutationCommand } from "../command.js";
+import { allLanguagesSet, allRequiredSet, IMutationCommand } from "../command.js";
 import { libApply } from "../libapply.js";
+import { AllLanguagesSetRule } from "../rules.js";
 import { libUpdateItem } from "./libupdateitem.js";
 
 export type ChoiceList = { name: string; label: mlstring }[];
@@ -38,11 +39,16 @@ export class UpdateItemCommand implements IMutationCommand {
   private hasContext?: boolean;
 
   //#region parts
-  private buildParts(section: mlstring | undefined, context: boolean) {
+  private buildParts(survey: Survey, section: mlstring | undefined, context: boolean) {
     const builder = new SurveyBuilder();
     libUpdateItem(builder, "updateItem", { section, context });
     libApply(builder, "apply", section);
     this.parts = builder.get();
+    this.parts = this.parts.update({
+      crossRules: this.parts?.crossRules.append(
+        new CrossItemRule(this.wordingPart, new AllLanguagesSetRule(survey.options))
+      )
+    })
   }
 
   get itemParts(): IDomainCollection<PageItem> | undefined {
@@ -353,7 +359,7 @@ export class UpdateItemCommand implements IMutationCommand {
     this.hasContext =
       Array.isArray(this.pageItem.wording) ||
       this.pageItem instanceof ContextType;
-    this.buildParts(this.pageItem.section, this.hasContext);
+    this.buildParts(survey, this.pageItem.section, this.hasContext);
 
     survey.insertItems(
       pageIndex,
@@ -950,7 +956,7 @@ export class UpdateItemCommand implements IMutationCommand {
 
   canApply(survey: Survey, interviewItems: InterviewItem[]): boolean {
     const allParts = [...(this.parts?.items as IDomainCollection<PageItem>)];
-    return allRequiredSet(allParts, interviewItems);
+    return allRequiredSet(allParts, interviewItems) && allLanguagesSet(allParts, interviewItems);
   }
 }
 

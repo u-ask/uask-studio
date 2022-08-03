@@ -32,7 +32,6 @@ export function libInsertTableLine(
     .question("__COLUMN_NAMES__", b.types.text)
     .translate("en", "Columns : ")
     .translate("fr", "Colonnes : ")
-    .required()
     .comment("{.studio.studioItem.studioChoiceInput.variableName}");
 
   if (section) builder.endSection();

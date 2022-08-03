@@ -3,7 +3,6 @@ import {
   DomainCollection,
   execute,
   getTranslation,
-  HasValue,
   IDomainCollection,
   InterviewItem,
   mlstring,
@@ -13,38 +12,13 @@ import {
   PageSet,
   PageSetBuilder,
   Scope,
-  setMessageIf,
   Survey,
   SurveyBuilder,
-  UnitRule,
-  update,
 } from "uask-dom";
 import { allRequiredSet, allUniqueSet, IMutationCommand } from "../command.js";
+import { UniquePageSetRule } from "../rules.js";
 import { UpdatePageSetCommand } from "../update/updatepagesetcommand.js";
 import { libInsertPageSet } from "./libinsertpageset.js";
-
-export class UniquePageSetRule implements UnitRule {
-  constructor(readonly survey: Survey, readonly pageSet: PageSet) {}
-  execute(a: HasValue): HasValue {
-    const messages = setMessageIf(this.pageSetAlreadyExist(a.value as string))(
-      a.messages,
-      "unique",
-      "page set code must be unique"
-    );
-    return update(a, { messages });
-  }
-
-  private pageSetAlreadyExist(pageSetCode: string) {
-    return !!this.survey.pageSets.find(
-      p =>
-        getTranslation(p.type, "__code__", this.survey.options.defaultLang) ==
-        pageSetCode
-    );
-  }
-
-  name = "unique";
-  precedence = 100;
-}
 
 export class InsertPageSetCommand implements IMutationCommand {
   pageSetIndex?: number;
@@ -151,7 +125,10 @@ export class InsertPageSetCommand implements IMutationCommand {
     participant: MutableParticipant,
     interviewItems: InterviewItem[]
   ): void {
-    const { insertedPageSet } = this.bindPartItems(survey.value, interviewItems);
+    const { insertedPageSet } = this.bindPartItems(
+      survey.value,
+      interviewItems
+    );
     survey.insertPageSet(insertedPageSet);
 
     participant.updatePageSets(survey.pageSets);

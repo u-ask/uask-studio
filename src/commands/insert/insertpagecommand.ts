@@ -8,10 +8,6 @@ import {
   PageBuilder,
   PageItem,
   CrossItemRule,
-  HasValue,
-  setMessageIf,
-  UnitRule,
-  update,
   DomainCollection,
   getTranslation,
   MutableParticipant,
@@ -21,30 +17,7 @@ import {
 import { UpdatePageCommand } from "../update/updatepagecommand.js";
 import { IMutationCommand, allRequiredSet, allUniqueSet } from "../command.js";
 import { libInsertPage } from "./libinsertpage.js";
-
-export class UniquePageRule implements UnitRule {
-  readonly name = "unique";
-  readonly precedence = 100;
-
-  constructor(readonly survey: Survey, readonly page: Page) {}
-
-  execute(a: HasValue): HasValue {
-    const messages = setMessageIf(this.pageAlreadyExist(a.value as string))(
-      a.messages,
-      "unique",
-      "page name must be unique"
-    );
-    return update(a, { messages });
-  }
-
-  private pageAlreadyExist(pageCode: string) {
-    return !!this.survey.pages.find(
-      p =>
-        getTranslation(p.name, "__code__", this.survey.options.defaultLang) ==
-        pageCode
-    );
-  }
-}
+import { UniquePageRule } from "../rules.js";
 
 export class InsertPageCommand implements IMutationCommand {
   pageSetIndex?: number;

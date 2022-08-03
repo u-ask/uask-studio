@@ -7,7 +7,6 @@ import {
   InterviewItem,
   MutableParticipant,
   MutableSurvey,
-  PageBuilder,
   PageItem,
   Participant,
   ParticipantBuilder,
@@ -16,7 +15,7 @@ import {
   SurveyBuilder,
 } from "uask-dom";
 import test from "tape";
-import { InsertPageCommand, UniquePageRule } from "./insertpagecommand.js";
+import { InsertPageCommand } from "./insertpagecommand.js";
 import { UpdatePageCommand } from "../update/updatepagecommand.js";
 import { isConsistent } from "../test-utils.js";
 
@@ -119,15 +118,6 @@ test("Update page not allowed if non unique page name #97", t => {
     { unique: "page name must be unique" }
   );
   t.false(context.command.canApply(context.survey, result));
-  t.end();
-});
-
-test("Create unique page rule #97", t => {
-  const { survey } = buildTestSurvey();
-  const page = new PageBuilder("P3", {}).build([]);
-  const uniqueRule = new UniquePageRule(survey, page);
-  const exec = uniqueRule.execute({ value: "P3" });
-  t.deepLooseEqual(exec.messages, { unique: "page name must be unique" });
   t.end();
 });
 

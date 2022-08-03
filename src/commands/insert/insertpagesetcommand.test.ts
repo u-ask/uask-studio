@@ -10,7 +10,6 @@ import {
   MutableSurvey,
   Page,
   PageItem,
-  PageSetBuilder,
   ParticipantBuilder,
   Scope,
   SurveyBuilder,
@@ -18,10 +17,7 @@ import {
 import test from "tape";
 import { isConsistent } from "../test-utils.js";
 import { UpdatePageSetCommand } from "../update/updatepagesetcommand.js";
-import {
-  InsertPageSetCommand,
-  UniquePageSetRule,
-} from "./insertpagesetcommand.js";
+import { InsertPageSetCommand } from "./insertpagesetcommand.js";
 
 function buildTestSurvey() {
   const b = new SurveyBuilder();
@@ -149,14 +145,5 @@ test("Update command appliable with unique page set rule #249", t => {
     { unique: "page set code must be unique" }
   );
   t.false(command.canApply(mutableSurvey, result));
-  t.end();
-});
-
-test("Create unique page set rule #249", t => {
-  const { survey } = buildTestSurvey();
-  const pageSet = new PageSetBuilder("PS2", {}).build([]);
-  const uniqueRule = new UniquePageSetRule(survey, pageSet);
-  const exec = uniqueRule.execute({ value: "PS2" });
-  t.deepLooseEqual(exec.messages, { unique: "page set code must be unique" });
   t.end();
 });

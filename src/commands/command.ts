@@ -11,7 +11,11 @@ export interface IMutationCommand<S extends unknown[] = unknown[]> {
   pageIndex?: number;
   pageItemIndex?: number;
 
-  start(survey: MutableSurvey, participant: MutableParticipant, ...args: S): void;
+  start(
+    survey: MutableSurvey,
+    participant: MutableParticipant,
+    ...args: S
+  ): void;
   apply(
     survey: MutableSurvey,
     participant: MutableParticipant,
@@ -63,4 +67,11 @@ export function allInRangeSet(
   interviewItems: InterviewItem[]
 ): boolean {
   return allSet(parts, interviewItems, "unique");
+}
+
+export function allLanguagesSet(
+  parts: PageItem[],
+  interviewItems: InterviewItem[]
+): boolean {
+  return allSet(parts, interviewItems, "allLanguages");
 }

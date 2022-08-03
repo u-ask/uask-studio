@@ -1,4 +1,4 @@
-import { MutableSurvey, MutableParticipant, InterviewItem, Survey, PageItem, mlstring, IDomainCollection, CrossItemRule, Computed, Page, PageSet, Workflow, SurveyOptions, UnitRule, HasValue, CrossRule, IDomainProxy, Participant, Interview, Sample, LayoutSection, Item } from 'uask-dom';
+import { MutableSurvey, MutableParticipant, InterviewItem, Survey, PageItem, mlstring, IDomainCollection, CrossItemRule, Computed, Page, PageSet, Workflow, SurveyOptions, IDomainProxy, Participant, Interview, Sample, LayoutSection, Item } from 'uask-dom';
 import { PartialInterview, ClientDrivers, ISurveyDriver, ISampleDriver, IParticipantDriver, IParticipantDeleteDriver, IInterviewDriver, IInterviewDeleteDriver, ISummaryDriver, IUserDriver, IAuditDriver, IDocumentDriver, IKpiDriver } from 'uask-sys';
 import { Got } from 'got/dist/source';
 
@@ -19,6 +19,7 @@ declare class NullCommand implements IMutationCommand {
 declare function allRequiredSet(pageItems: PageItem[], interviewItems: InterviewItem[]): boolean;
 declare function allUniqueSet(pageItems: PageItem[], interviewItems: InterviewItem[]): boolean;
 declare function allInRangeSet(parts: PageItem[], interviewItems: InterviewItem[]): boolean;
+declare function allLanguagesSet(parts: PageItem[], interviewItems: InterviewItem[]): boolean;
 
 declare type ChoiceList = {
     name: string;
@@ -218,13 +219,6 @@ declare class UpdateSurveyOptionsCommand implements IMutationCommand {
     canApply(): boolean;
 }
 
-declare class UniquePageItemRule implements UnitRule {
-    readonly survey: Survey;
-    constructor(survey: Survey);
-    execute(a: HasValue): HasValue;
-    name: string;
-    precedence: number;
-}
 declare class InsertItemCommand implements IMutationCommand {
     pageIndex?: number;
     pageItemIndex?: number;
@@ -248,15 +242,6 @@ declare class InsertItemCommand implements IMutationCommand {
     canApply(survey: Survey, interviewItems: InterviewItem[]): boolean;
 }
 
-declare class UniquePageRule implements UnitRule {
-    readonly survey: Survey;
-    readonly page: Page;
-    readonly name = "unique";
-    readonly precedence = 100;
-    constructor(survey: Survey, page: Page);
-    execute(a: HasValue): HasValue;
-    private pageAlreadyExist;
-}
 declare class InsertPageCommand implements IMutationCommand {
     pageSetIndex?: number;
     pageIndex?: number;
@@ -278,15 +263,6 @@ declare class InsertPageCommand implements IMutationCommand {
     canApply(survey: Survey, interviewItems: InterviewItem[]): boolean;
 }
 
-declare class UniquePageSetRule implements UnitRule {
-    readonly survey: Survey;
-    readonly pageSet: PageSet;
-    constructor(survey: Survey, pageSet: PageSet);
-    execute(a: HasValue): HasValue;
-    private pageSetAlreadyExist;
-    name: string;
-    precedence: number;
-}
 declare class InsertPageSetCommand implements IMutationCommand {
     pageSetIndex?: number;
     pageIndex?: number;
@@ -307,15 +283,6 @@ declare class InsertPageSetCommand implements IMutationCommand {
     canApply(survey: Survey, interviewItems: InterviewItem[]): boolean;
 }
 
-declare class UniqueWorkflowRule implements CrossRule {
-    readonly survey: Survey;
-    readonly workflow: Workflow;
-    constructor(survey: Survey, workflow: Workflow);
-    execute(names: HasValue, spec: HasValue): [HasValue, HasValue];
-    workflowAlreadyExist(names: string[], spec: string): boolean;
-    name: string;
-    precedence: number;
-}
 declare class InsertWorkflowCommand implements IMutationCommand {
     pageSetIndex?: number;
     pageIndex?: number;
@@ -533,4 +500,4 @@ declare class UnfoldLayout extends Array<LayoutSection<Item>> {
     constructor(layout: IDomainCollection<LayoutSection<Item>>, pageItem: Item);
 }
 
-export { ChoiceList, DeleteItemCommand, DeletePageCommand, DeletePageSetCommand, DeleteWorkflowCommand, IMutationCommand, IStudioState, InsertItemCommand, InsertPageCommand, InsertPageSetCommand, InsertTableLineCommand, InsertWorkflowCommand, NullCommand, OrderItemCommand, ParticipantState, ParticipantTemplate, ScoreList, StudioDrivers, StudioState, SurveyState, SurveyTemplate, UnfoldLayout, UniquePageItemRule, UniquePageRule, UniquePageSetRule, UniqueWorkflowRule, UpdateItemCommand, UpdatePageCommand, UpdatePageSetCommand, UpdateSurveyOptionsCommand, UpdateWorkflowCommand, allInRangeSet, allRequiredSet, allUniqueSet, getApplyItem, parseRangeValue };
+export { ChoiceList, DeleteItemCommand, DeletePageCommand, DeletePageSetCommand, DeleteWorkflowCommand, IMutationCommand, IStudioState, InsertItemCommand, InsertPageCommand, InsertPageSetCommand, InsertTableLineCommand, InsertWorkflowCommand, NullCommand, OrderItemCommand, ParticipantState, ParticipantTemplate, ScoreList, StudioDrivers, StudioState, SurveyState, SurveyTemplate, UnfoldLayout, UpdateItemCommand, UpdatePageCommand, UpdatePageSetCommand, UpdateSurveyOptionsCommand, UpdateWorkflowCommand, allInRangeSet, allLanguagesSet, allRequiredSet, allUniqueSet, getApplyItem, parseRangeValue };
